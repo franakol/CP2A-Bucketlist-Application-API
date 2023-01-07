@@ -28,8 +28,6 @@ $ pip install -r requirements.txt
 
 Run the project in development
 ```
-$ export FLASK_APP=api/
-$ export FLASK_DEBUG=1
 $ flask run
 ```
 Or 
