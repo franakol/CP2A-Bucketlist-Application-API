@@ -16,7 +16,7 @@ class Config:
     JWT_SECRET_KEY=config('JWT_SECRET_KEY')
 
 class DevConfig(Config):
-    SQLALCHEMY_DATABASE_URI='sqlite:///'+os.path.join(BASE_DIR,'db.sqlite3')
+    SQLALCHEMY_DATABASE_URI= 'postgresql://afran:123@localhost:5432/db'
     SQLALCHEMY_TRACK_MODIFICATION=False
     DEBUG=True
     SQLALCHEMY_ECHO=True

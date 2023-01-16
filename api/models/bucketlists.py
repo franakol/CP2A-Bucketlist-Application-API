@@ -13,7 +13,7 @@ class Bucketlist(db.Model):
     items=db.relationship('Item', backref='bucketlist', lazy=True)
 
 
-    def __repr__(self):
+    def __str__(self):
         return f"<Bucketlist {self.bucket_id}>"
 
 

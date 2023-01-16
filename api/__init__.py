@@ -9,6 +9,7 @@ from .models.users import User
 from .models.items import Item
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
+from .models import Base
 
 def create_app(config=config_dict['dev']):
     app=Flask(__name__)
@@ -32,17 +33,20 @@ def create_app(config=config_dict['dev']):
         security="Bearer Auth"
 
     )
-
-    db.init_app(app)
-
-    migrate=Migrate(app,db)
-
-
+    
 
     api.add_namespace(bucketlist_namespace,path='/bucketlists')
     api.add_namespace(auth_namespace,path='/auth')
+    
+
+    
+    db.init_app(app)
 
     jwt=JWTManager(app)
+    
+    migrate=Migrate(app,db)
+
+
 
     @app.shell_context_processor
     def make_shell_context():
