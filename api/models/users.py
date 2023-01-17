@@ -10,7 +10,7 @@ class User(db.Model):
     password=db.Column(db.Text(),nullable=False)
     date_created=db.Column(db.DateTime(),default=datetime.utcnow())
     date_modified=db.Column(db.DateTime(),onupdate=datetime.utcnow())
-    bucketlists=db.relationship('Bucketlist',backref='user',lazy=True)
+    bucketlists=db.relationship('Bucketlist',backref='', passive_deletes=True)
     
      
     def __init__(self, username, email, password, 

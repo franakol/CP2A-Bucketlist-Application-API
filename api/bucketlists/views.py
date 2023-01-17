@@ -47,10 +47,11 @@ class BucketlistGetCreate(Resource):
         new_bucketlist=Bucketlist(
             name=data['name'],
             date_created=data['date_created'],
+            created_by=current_user.user_id,
             
         )
 
-        new_bucketlist.created_by=current_user
+        new_bucketlist.created_by=current_user.user_id
 
         new_bucketlist.save()
 
@@ -115,7 +116,7 @@ class GetUpdateDelete(Resource):
         bucketlist_to_update.name=data['name']
         bucketlist_to_update.date_created=data['date_created']
         bucketlist_to_update.date_modified=data['date_modified']
-        bucketlist_to_update.created_by=data['created_by']
+        bucketlist_to_update.created_by=data['created_by'].user_id
 
         db.session.commit()
 
