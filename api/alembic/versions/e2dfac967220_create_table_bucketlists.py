@@ -22,7 +22,8 @@ def upgrade() -> None:
         sa.Column('bucket_id', sa.Integer, primary_key=True),
         sa.Column('name', sa.String(45), nullable=False, unique=True),
         sa.Column('date_created', sa.DateTime, server_default=sa.func.current_timestamp()),
-        sa.Column('date_modified', sa.DateTime, server_default=sa.func.current_timestamp())
+        sa.Column('date_modified', sa.DateTime, server_default=sa.func.current_timestamp()),
+        
 
     )
 
