@@ -10,12 +10,16 @@ from .models.items import Item
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from .models import Base
+from flask_cors import CORS
+from werkzeug.exceptions import NotFound, MethodNotAllowed
+
 
 def create_app(config=config_dict['dev']):
     app=Flask(__name__)
-
-
     app.config.from_object(config)
+
+    
+    
 
     authorizations={
         "Bearer Auth":{
@@ -25,7 +29,8 @@ def create_app(config=config_dict['dev']):
             'description':"Add a JWT with ** Bearer &lt;JWT&gt; to authorize"
         }
     }
-
+    cors = CORS(app, resources={r"*": {"origins": "*"}})
+    
     api=Api(app,
         title="CP2A - BucketList Application API",
         description="REST API for a Bucketlist Application using flask",
@@ -46,8 +51,11 @@ def create_app(config=config_dict['dev']):
     
     migrate=Migrate(app,db)
 
+    @api.errorhandler(NotFound)
+    def not_found(error):
 
 
+    
     @app.shell_context_processor
     def make_shell_context():
         return{

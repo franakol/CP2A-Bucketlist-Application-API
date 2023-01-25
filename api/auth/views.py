@@ -9,6 +9,7 @@ create_refresh_token,jwt_required,get_jwt_identity)
 from datetime import datetime
 
 
+
 auth_namespace=Namespace('auth',description="a namespace for authentication")
 
 register_model=auth_namespace.model(
@@ -77,12 +78,13 @@ class Register(Resource):
         return new_user , HTTPStatus.CREATED
 
 
-
 @auth_namespace.route('/login')
 class Login(Resource):
 
     @auth_namespace.expect(login_model)
     def post(self):
+
+
         """
            Logs a user in, generates jwt token
         """
@@ -106,5 +108,5 @@ class Login(Resource):
                 'refresh_token':refresh_token
             }
 
-
+            print("response")
             return response, HTTPStatus.OK
