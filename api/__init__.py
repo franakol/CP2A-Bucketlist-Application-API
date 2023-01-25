@@ -53,6 +53,12 @@ def create_app(config=config_dict['dev']):
 
     @api.errorhandler(NotFound)
     def not_found(error):
+        return{"error":"Not Found"},404
+
+    @api.errorhandler(MethodNotAllowed)
+    def method_not_allowed(error):
+        return{"error": "Method Not Allowed"},405
+
 
 
     
