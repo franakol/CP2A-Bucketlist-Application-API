@@ -77,7 +77,12 @@ class Register(Resource):
 
           new_user.save()
 
-          return new_user , HTTPStatus.CREATED
+          response = {
+            'message': 'registered successfully',
+            'user' : new_user
+          }
+
+          return response , HTTPStatus.CREATED
 
         except Exception as e:
             raise Conflict(f"User with email {data.get('email')} exists")
@@ -110,7 +115,8 @@ class Login(Resource):
 
             response={
                 'access_token':access_token,
-                'refresh_token':refresh_token
+                'refresh_token':refresh_token,
+                'message': 'login successful'
             }
 
             
