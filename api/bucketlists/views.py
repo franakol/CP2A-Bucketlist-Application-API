@@ -117,7 +117,7 @@ class GetUpdateDelete(Resource):
         description="Update this bucket list",
         params={
             "bucketlist_id":"An ID for a given bucketlist",
-            "name": "Name of a  given bucketlist",
+            
 
         }
     )
@@ -130,13 +130,18 @@ class GetUpdateDelete(Resource):
 
         bucketlist_to_update=Bucketlist.query.get(bucket_id)
 
-        data=bucketlist_namespace.payload
+        #check if the bucketlist exists
+        if not bucketlist_to_update:
+            return {"message": "Bucketlist not found"}, HTTPStatus.NOT_FOUND
+
+        #Update bucketlists attributes
+        data=request.json
+
 
         bucketlist_to_update.name=data['name']
-        bucketlist_to_update.date_created=data['date_created']
-        bucketlist_to_update.date_modified=data['date_modified']
-        bucketlist_to_update.created_by=data['created_by'].user_id
-
+        bucketlist_to_update.date_modified=datetime.utcnow()
+        
+        #commit changes to database
         db.session.commit()
 
         return bucketlist_to_update, HTTPStatus.OK
@@ -178,7 +183,7 @@ class Get(Resource):
         data = request.json
         new_item = Item(
             name=data['name'],
-            date_created=datetime.now(),
+            date_created=datetime.utcnow(),
             bucket_id=bucket_id
         )
         db.session.add(new_item)
@@ -194,30 +199,38 @@ class UpdateDelete(Resource):
     @bucketlist_namespace.doc(
         description="Update a bucket list item",
         params={
-            "bucketlist_id":"An ID for a given bucketlist",
             "item_id":"An item ID"
 
         }
     )
+    @bucketlist_namespace.expect(item_model)
+    @bucketlist_namespace.marshal_with(item_model)
+    @jwt_required()
 
     def put(self,bucket_id,item_id):
         """
             Update a bucket list item
         """
-        data=bucketlist_namespace.payload
-        item = Item.query.filter_by(id=item_id).first()
-        if item:
-            item.name = data['name']
-            item.date_created = data['date_created']
-            item.save()
-            return item, HTTPStatus.OK
-        else:
-            return {"error": "item not found"}, HTTPStatus.NOT_FOUND
+
+        #Get the item to update
+        item = Item.query.get(item_id)
+        #checking if item exists
+        if not item:
+            return {"error": "Item not found"}, HTTPStatus.NOT_FOUND
+        #update the items attributes
+        data = request.json
+        item.name = data['name']
+        item.date_modified = datetime.utcnow()
+        #commit changes to database
+        db.session.commit()
+
+        return item, HTTPStatus.OK
+
     
     @bucketlist_namespace.doc(
         description="Delete an item in a bucket list",
          params={
-            "bucketlist_id":"An ID for a given bucketlist",
+            
             "item_id":"An item ID"
 
         }
@@ -228,7 +241,7 @@ class UpdateDelete(Resource):
             Delete an item in a bucket list
         """
         
-        item = Item.query.filter_by(id=item_id).first()
+        item = Item.query.get(item_id)
         if item:
             item.delete()
             return {"message": "item deleted successfully"}, HTTPStatus.OK
