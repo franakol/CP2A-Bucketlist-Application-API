@@ -7,6 +7,8 @@ from http import HTTPStatus
 from flask_jwt_extended import (create_access_token,
 create_refresh_token,jwt_required,get_jwt_identity)
 from datetime import datetime
+from werkzeug.exceptions import Conflict, BadRequest
+
 
 
 auth_namespace=Namespace('auth',description="a namespace for authentication")
@@ -61,8 +63,10 @@ class Register(Resource):
            returns data in json
         """        
 
+        try:
 
-        new_user=User(
+
+          new_user=User(
             username=data.get('username'),
             email=data.get('email'),
             password=generate_password_hash( data.get('password')),
@@ -71,11 +75,17 @@ class Register(Resource):
 
         )
 
+          new_user.save()
 
-        new_user.save()
+          response = {
+            'message': 'registered successfully',
+            'user' : new_user
+          }
 
-        return new_user , HTTPStatus.CREATED
+          return response , HTTPStatus.CREATED
 
+        except Exception as e:
+            raise Conflict(f"User with email {data.get('email')} exists")
 
 
 @auth_namespace.route('/login')
@@ -83,6 +93,8 @@ class Login(Resource):
 
     @auth_namespace.expect(login_model)
     def post(self):
+
+
         """
            Logs a user in, generates jwt token
         """
@@ -103,8 +115,11 @@ class Login(Resource):
 
             response={
                 'access_token':access_token,
-                'refresh_token':refresh_token
+                'refresh_token':refresh_token,
+                'message': 'login successful'
             }
 
-
+            
             return response, HTTPStatus.OK
+
+        raise BadRequest("Invalid Username or Password")
