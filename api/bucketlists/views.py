@@ -3,7 +3,11 @@ from ..models.bucketlists import Bucketlist
 from http import HTTPStatus
 from flask_jwt_extended import jwt_required,get_jwt_identity
 from ..models.users import User
+from ..models.items import Item
 from ..utils import db
+from werkzeug.exceptions import Conflict, BadRequest
+from flask import request
+from datetime import datetime
 
 
 bucketlist_namespace=Namespace('bucketlists',description="a namespace for bucketlists")
@@ -22,7 +26,19 @@ bucketlist_model=bucketlist_namespace.model(
 
 )
 
+item_model=bucketlist_namespace.model(
+    'Item',{
+        'item_id':fields.Integer(description="An id"),
+        'name':fields.String(description="Name of the bucketlist item"),
+        'date_created':fields.DateTime(description="date of creation of the bucketlist item"),
+        'date_modified':fields.DateTime(description="date of modification of the bucketlist item"),
+        'bucket_id':fields.Integer(description="bucket id"),
 
+        
+    
+    }
+
+)
 @bucketlist_namespace.route('/')
 class BucketlistGetCreate(Resource):
 
@@ -43,7 +59,7 @@ class BucketlistGetCreate(Resource):
         
 
         data=bucketlist_namespace.payload
-
+    
         new_bucketlist=Bucketlist(
             name=data['name'],
             date_created=data['date_created'],
@@ -56,9 +72,10 @@ class BucketlistGetCreate(Resource):
         new_bucketlist.save()
 
         return new_bucketlist , HTTPStatus.CREATED
+         
+   
 
     @bucketlist_namespace.marshal_with(bucketlist_model)
-
     @bucketlist_namespace.doc(
         description="List all the created bucket lists"
     )
@@ -85,11 +102,12 @@ class GetUpdateDelete(Resource):
         }
     )
     @jwt_required()
-    def get(self,bucketlist_id):
+    def get(self,bucket_id):
         """
            Get single bucket list
         """
-        bucketlist=Bucketlist.get_by_id(bucketlist_id)
+        bucketlist=Bucketlist.query.get(bucket_id)
+        
 
         return bucketlist ,HTTPStatus.OK
 
@@ -98,18 +116,19 @@ class GetUpdateDelete(Resource):
     @bucketlist_namespace.doc(
         description="Update this bucket list",
         params={
-            "bucketlist_id":"An ID for a given bucketlist"
+            "bucketlist_id":"An ID for a given bucketlist",
+            "name": "Name of a  given bucketlist",
 
         }
     )
     @jwt_required()
-    def put(self,bucketlist_id):
+    def put(self,bucket_id):
         """
            Update this bucket list
         """
         
 
-        bucketlist_to_update=Bucketlist.get_by_id(bucketlist_id)
+        bucketlist_to_update=Bucketlist.query.get(bucket_id)
 
         data=bucketlist_namespace.payload
 
@@ -132,36 +151,43 @@ class GetUpdateDelete(Resource):
 
         }
     )
-    def delete(self,bucketlist_id):
+    def delete(self,bucket_id):
         """
            Delete this single bucket list
         """
-        bucketlist_to_delete=Bucketlist.get_by_id(bucketlist_id)
+        bucketlist_to_delete=Bucketlist.query.get(bucket_id)
 
         bucketlist_to_delete.delete()
 
         return bucketlist_to_delete, HTTPStatus.OK
 
 
-@bucketlist_namespace.route('/<int:bucketlist_id>/items')
-@bucketlist_namespace.doc(
-        description="create a new item in the bucket list",
-        params={
-            "bucketlist_id":"An ID for a given bucketlist"
-
-        }
-    )
+@bucketlist_namespace.route('/<int:bucket_id>/items')
 class Get(Resource):
-    
-    def post(self,bucketlist_id,item):
+
+   
+   @bucketlist_namespace.marshal_with(item_model)
+   @bucketlist_namespace.expect(item_model)
+   @jwt_required()
+   def post(self, bucket_id):
         """
             Create a new item in bucket list        
         """
-        pass
+        username = get_jwt_identity()
+        current_user = User.query.filter_by(username=username).first()
+        data = request.json
+        new_item = Item(
+            name=data['name'],
+            date_created=datetime.now(),
+            bucket_id=bucket_id
+        )
+        db.session.add(new_item)
+        db.session.commit()
+        return new_item, HTTPStatus.CREATED
 
 
 
-@bucketlist_namespace.route('/<int:bucketlist_id>/items/<int:item_id>')
+@bucketlist_namespace.route('/<int:bucket_id>/items/<int:item_id>')
 
 class UpdateDelete(Resource):
 
@@ -174,11 +200,19 @@ class UpdateDelete(Resource):
         }
     )
 
-    def put(self,bucketlist_id,item,item_id):
+    def put(self,bucket_id,item_id):
         """
             Update a bucket list item
         """
-        pass
+        data=bucketlist_namespace.payload
+        item = Item.query.filter_by(id=item_id).first()
+        if item:
+            item.name = data['name']
+            item.date_created = data['date_created']
+            item.save()
+            return item, HTTPStatus.OK
+        else:
+            return {"error": "item not found"}, HTTPStatus.NOT_FOUND
     
     @bucketlist_namespace.doc(
         description="Delete an item in a bucket list",
@@ -188,8 +222,16 @@ class UpdateDelete(Resource):
 
         }
     )
-    def delete(self,bucketlist_id,item,item_id):
+
+    def delete(self,bucket_id,item_id):
         """
             Delete an item in a bucket list
         """
-        pass
+        
+        item = Item.query.filter_by(id=item_id).first()
+        if item:
+            item.delete()
+            return {"message": "item deleted successfully"}, HTTPStatus.OK
+        else:
+            return {"error": "item not found"}, HTTPStatus.NOT_FOUND
+
