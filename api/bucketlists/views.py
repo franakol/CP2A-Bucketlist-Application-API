@@ -89,7 +89,7 @@ class BucketlistGetCreate(Resource):
 
         return bucketlists ,HTTPStatus.OK
 
-@bucketlist_namespace.route('/<int:bucketlist_id>')
+@bucketlist_namespace.route('/<int:bucket_id>')
 class GetUpdateDelete(Resource):
 
 
